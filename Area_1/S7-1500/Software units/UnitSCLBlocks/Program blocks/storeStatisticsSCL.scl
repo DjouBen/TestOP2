@@ -1,0 +1,64 @@
+﻿FUNCTION "storeStatisticsSCL" : Void
+{ S7_Optimized_Access := 'TRUE' ; Published := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      new : Bool;
+   END_VAR
+
+   VAR_IN_OUT 
+      store : "typeStore";
+      storeStatistics : "typeStoreStatistics";
+   END_VAR
+
+   VAR_TEMP 
+      tempIndex : UInt;
+      tempStartIndex : UInt;
+   END_VAR
+
+
+BEGIN
+	REGION new store ?
+	    IF #new THEN
+	        #storeStatistics.averageWeight := #storeStatistics.currentQuantity := #storeStatistics.maximumWeight := #storeStatistics.minimumWeight := #storeStatistics.weightSum := 0;
+	    END_IF;
+	END_REGION
+	
+	REGION statistics
+	    IF #store.currentQuantity > 0 THEN
+	        
+	        REGION new store ?
+	            IF #new THEN
+	                #tempStartIndex := 0;
+	            ELSE
+	                #tempStartIndex := #store.currentQuantity - 1;
+	            END_IF;
+	        END_REGION
+	        
+	        FOR #tempIndex := #tempStartIndex TO #store.currentQuantity - 1 DO
+	            REGION max
+	                IF #store.weights[#tempIndex] > #storeStatistics.maximumWeight THEN
+	                    #storeStatistics.maximumWeight := #store.weights[#tempIndex];
+	                END_IF;
+	            END_REGION
+	            
+	            REGION min
+	                IF #store.weights[#tempIndex] < #storeStatistics.minimumWeight THEN
+	                    #storeStatistics.minimumWeight := #store.weights[#tempIndex];
+	                END_IF;
+	            END_REGION
+	            
+	            REGION sum
+	                #storeStatistics.weightSum := #storeStatistics.weightSum + #store.weights[#tempIndex];
+	            END_REGION
+	            
+	        END_FOR;
+	        
+	        REGION average
+	            #storeStatistics.averageWeight := #storeStatistics.weightSum / #store.currentQuantity;
+	        END_REGION
+	        
+	    END_IF;
+	    
+	END_REGION
+END_FUNCTION
+
